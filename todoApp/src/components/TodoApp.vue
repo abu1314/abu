@@ -1,76 +1,65 @@
 <template>
-    <div class="todo-app">
-      <h1>Vue 3 Todo App</h1>
-      <input v-model="newTodo" @keyup.enter="addTodo" placeholder="Add a new task" />
-      <ul>
-        <li v-for="(todo, index) in todos" :key="index">
-          <span>{{ todo }}</span>
-          <button @click="removeTodo(index)">删除</button>
-        </li>
-      </ul>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        newTodo: '',
-        todos: []
-      };
+  <div class="todo-app">
+    <h1>小应用</h1>
+    <input v-model="newTodo" @keyup.enter="addTodo" placeholder="添加" />
+    <ul>
+      <li v-for="(todo, index) in currentPageTodos" :key="index">
+        <input type="checkbox" v-model="todo.completed" />
+        <span :class="{ completed: todo.completed }">{{ todo.text }}</span>
+        <button @click="removeTodo(index)">删除</button>
+      </li>
+    </ul>
+    <select name="dqy" v-model="pageSize" > 
+      <option value="5">5</option>
+      <option value="10">10</option>
+    </select>
+    <span>当前页 {{ currentPage }} 共 {{ pageCount }}页</span>
+    <button v-if="currentPage > 1" @click="prevPage">上一页</button>
+    <button v-if="currentPage < pageCount" @click="nextPage">下一页</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      newTodo: '',
+      todos: JSON.parse(localStorage.getItem('todos')) || [],
+      currentPage: 1,
+      pageSize: 5
+    };
+  },
+  computed: {
+    pageCount() {
+      return Math.ceil(this.todos.length / this.pageSize);
     },
-    methods: {
-      addTodo() {
-        if (this.newTodo.trim() !== '') {
-          this.todos.push(this.newTodo.trim());
-          this.newTodo = '';
-        }
-      },
-      removeTodo(index) {
-        this.todos.splice(index, 1);
-      }
+    currentPageTodos() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.todos.slice(start, end);
     }
-  };
-  </script>
-  
-  <style scoped>
-  .todo-app {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f4f4f9;
-    border-radius: 8px;
+  },
+  methods: {
+    addTodo() {
+      if (this.newTodo.trim() !== '') {
+        this.todos.push({ text: this.newTodo.trim(), completed: false });
+        this.newTodo = '';
+        this.saveTodos();
+      }
+    },
+    removeTodo(index) {
+      this.todos.splice(index, 1);
+      this.saveTodos();
+    },
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--;
+    },
+    nextPage() {
+      if (this.currentPage < this.pageCount) this.currentPage++;
+    },
+    saveTodos() {
+      localStorage.setItem('todos', JSON.stringify(this.todos));
+    }
   }
-  input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  li {
-    padding: 8px;
-    background-color: #fff;
-    margin: 5px 0;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  button {
-    background-color: red;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 5px 10px;
-    cursor: pointer;
-  }
-  button:hover {
-    background-color: darkred;
-  }
-  </style>
-  
+};
+</script>
